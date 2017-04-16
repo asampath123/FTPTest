@@ -14,13 +14,22 @@ import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.jcraft.jsch.Channel;
+import com.jcraft.jsch.ChannelSftp;
+import com.jcraft.jsch.JSch;
+import com.jcraft.jsch.Session;
+import com.jcraft.jsch.SftpProgressMonitor;
+
+import org.apache.commons.net.ftp.FTP;
 import org.apache.commons.net.ftp.FTPClient;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Properties;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -80,6 +89,9 @@ public class MainActivity extends AppCompatActivity {
             //this is needed if you want to show pic in image view
             //setPic();
             Toast.makeText(this,"Pic stored!",Toast.LENGTH_LONG).show();
+
+
+
         }
     }
 
@@ -91,36 +103,60 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void run() {
-
+                System.out.println("filePath"+filePath);
                 File file = new File(filePath);
+                Session session = null;
+                Channel channel = null;
+                Properties config = new Properties();
+                config.put("StrictHostKeyChecking", "no");
+                boolean conStatus = false;
+                SftpProgressMonitor mSpm = null;
                 String ftp_server_username="asampath";
                 String ftp_server_password="my name is abhi";
+                System.out.println("ftp_server_username set");
                 try {
-
-                    FTPClient client = new FTPClient();
-                    client.connect("silo.soic.indiana.edu");
-                    client.login(ftp_server_username, ftp_server_password); //this is the login credentials of your ftpserver. Ensure to use valid username and password otherwise it throws exception
-
-                    try {
-
-                        client.changeWorkingDirectory("/u/asampath"); //I want to upload picture in MyPictures directory/folder. you can use your own.
-                    } catch (Exception e) {
-                        //client.createDirectory("MyPictures");
-                        //client.changeDirectory("MyPictures");
-                    }
+                    JSch ssh = new JSch();
+                    session = ssh.getSession(ftp_server_username, "silo.soic.indiana.edu", 22);
+                    session.setPassword(ftp_server_password);
+                    session.setConfig(config);
+                    session.connect();
+                    conStatus = session.isConnected();
+                    System.out.println("Session is "+conStatus);
+                    channel = session.openChannel("sftp");
+                    channel.connect();
+                    //client.setFileType(FTP.BINARY_FILE_TYPE);
+                    System.out.println("connection established");
+                    ChannelSftp sftp = (ChannelSftp) channel;
                     fis = new FileInputStream(file);
+                    //sftp.put(filePath, "/u/asampath/");
+                    //sftp.put(fis,sftp.pwd());
+                    sftp.put(filePath,"/u/asampath/");
+                    //sftp.put(filePath,sftp.pwd());
+                    //FTPClient client = new FTPClient();
+                    //System.out.println("FTPClient");
+                    //client.enterLocalPassiveMode();
+                    //client.connect(InetAddress.getByName("silo.soic.indiana.edu"),22);
+                    //System.out.println("client.connect");
+                    //client.login(ftp_server_username, ftp_server_password); //this is the login credentials of your ftpserver. Ensure to use valid username and password otherwise it throws exception
+                    //System.out.println("client.login");
+
+                    //fis = new FileInputStream(file);
                     // Upload file to the ftp server
-                    boolean result = client.storeFile("testfile",fis);
-                    if(result){
+                    //boolean result = client.storeFile("testfile",fis);
+                    //if(result){
                         // Toast.makeText(this,"file sent",Toast.LENGTH_LONG).show();
                         System.out.println("File sent");
-                    }
+                    //}
                     //this is actual file uploading on FtpServer in specified directory/folder
-                    client.disconnect();   //after file upload, don't forget to disconnect from FtpServer.
+                    //client.logout();
+                    //client.disconnect();   //after file upload, don't forget to disconnect from FtpServer.
+                    fis.close();
                     file.delete();
                 } catch (Exception e) {
+                    System.out.print(e.getMessage());
+                    e.printStackTrace();
                     //Toast.makeText(getApplicationContext(), "Exception: " + e.getMessage(), Toast.LENGTH_LONG).show();
-                }
+            }
             }
 
 
