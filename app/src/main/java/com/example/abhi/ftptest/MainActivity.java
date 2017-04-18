@@ -14,6 +14,7 @@ import android.view.View;
 import android.widget.RelativeLayout;
 import android.widget.Toast;
 
+import com.android.internal.http.multipart.MultipartEntity;
 import com.jcraft.jsch.Channel;
 import com.jcraft.jsch.ChannelSftp;
 import com.jcraft.jsch.JSch;
@@ -30,6 +31,17 @@ import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Properties;
+import java.io.File;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpVersion;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.mime.content.ContentBody;
+import org.apache.http.entity.mime.content.FileBody;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.params.CoreProtocolPNames;
+import org.apache.http.util.EntityUtils;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -95,6 +107,38 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /*public void buttonUploadClick(View view) throws IOException{
+
+                HttpClient httpclient = new DefaultHttpClient();
+                httpclient.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
+
+                HttpPost httppost = new HttpPost("http://localhost:9000/upload");
+                File file = new File("C:\\Users\\joao\\Pictures\\bla.jpg");
+
+                org.apache.http.entity.mime.MultipartEntity mpEntity = new org.apache.http.entity.mime.MultipartEntity();
+                ContentBody cbFile = new FileBody(file, "image/jpeg");
+                mpEntity.addPart("userfile", cbFile);
+
+
+                httppost.setEntity(mpEntity);
+                System.out.println("executing request " + httppost.getRequestLine());
+                HttpResponse response = httpclient.execute(httppost);
+                HttpEntity resEntity = response.getEntity();
+
+                System.out.println(response.getStatusLine());
+                if (resEntity != null) {
+                    System.out.println(EntityUtils.toString(resEntity));
+                }
+                if (resEntity != null) {
+                    resEntity.consumeContent();
+                }
+
+                httpclient.getConnectionManager().shutdown();
+            }*/
+
+
+
+
 
     public void buttonUploadClick(View view) {
         System.out.println("buttonUploadClick");
@@ -127,10 +171,12 @@ public class MainActivity extends AppCompatActivity {
                     //client.setFileType(FTP.BINARY_FILE_TYPE);
                     System.out.println("connection established");
                     ChannelSftp sftp = (ChannelSftp) channel;
-                    fis = new FileInputStream(file);
+                    sftp.cd("/u/asampath/");
+                    fis = new FileInputStream(filePath);
                     //sftp.put(filePath, "/u/asampath/");
                     //sftp.put(fis,sftp.pwd());
-                    sftp.put(filePath,"/u/asampath/");
+
+                    sftp.put(fis,file.getName());
                     //sftp.put(filePath,sftp.pwd());
                     //FTPClient client = new FTPClient();
                     //System.out.println("FTPClient");
